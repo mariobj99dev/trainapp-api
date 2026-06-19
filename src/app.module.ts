@@ -11,6 +11,11 @@ import { ConfigModule } from '@nestjs/config'
 import { RedisModule } from './redis/redis.module'
 import { validateEnv } from './config/env.config'
 
+const schemaPath =
+    process.env.NODE_ENV === 'production'
+        ? '/tmp/schema.gql'
+        : join(process.cwd(), 'src/schema.gql')
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -19,10 +24,10 @@ import { validateEnv } from './config/env.config'
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile: schemaPath,
       context: ({ req }: { req: Request }) => ({ req }),
       sortSchema: true,
-      playground: true
+      playground: process.env.NODE_ENV !== 'production'
     }),
 
     PrismaModule,
