@@ -1,0 +1,95 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "./generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String    @id @db.Uuid
+  email           String    @unique @db.VarChar(255)
+  username        String    @unique @db.VarChar(50)
+  status          String    @default("ACTIVE") @db.VarChar(20)
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz(6)
+  isAdmin         Boolean   @default(false) @map("is_admin")
+  createdAt       DateTime  @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @map("updated_at") @db.Timestamptz(6)
+
+  authProviders AuthProvider[]
+  credential    Credential?
+  profile       Profile?
+  twoFactor     UserTwoFactor?
+  recoveryCodes RecoveryCode[]
+
+  @@map("users")
+}
+
+model Profile {
+  id          String   @id @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  displayName String   @map("display_name") @db.VarChar(100)
+  avatarUrl   String?  @map("avatar_url")
+  createdAt   DateTime @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profiles_user_id_fk")
+
+  @@map("profiles")
+}
+
+model Credential {
+  id           String   @id @db.Uuid
+  userId       String   @unique @map("user_id") @db.Uuid
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "credentials_user_id_fk")
+
+  @@map("credentials")
+}
+
+model AuthProvider {
+  id             String   @id @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  provider       String   @db.VarChar(30)
+  providerUserId String   @map("provider_user_id") @db.VarChar(255)
+  providerEmail  String?  @map("provider_email") @db.VarChar(255)
+  createdAt      DateTime @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "auth_providers_user_id_fk")
+
+  @@unique([provider, providerUserId], map: "auth_providers_provider_user_unique")
+  @@unique([userId, provider], map: "auth_providers_user_provider_unique")
+  @@map("auth_providers")
+}
+
+model UserTwoFactor {
+  id          String    @id @db.Uuid
+  userId      String    @unique @map("user_id") @db.Uuid
+  secret      String
+  enabled     Boolean   @default(false)
+  confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz(6)
+  createdAt   DateTime  @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_two_factor_user_id_fk")
+
+  @@map("user_two_factor")
+}
+
+model RecoveryCode {
+  id        String    @id @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  codeHash  String    @map("code_hash")
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt DateTime  @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "recovery_codes_user_id_fk")
+
+  @@index([userId], map: "recovery_codes_user_id_idx")
+  @@map("recovery_codes")
+}
