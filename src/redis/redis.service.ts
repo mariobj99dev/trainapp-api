@@ -7,9 +7,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly client: Redis
 
   constructor(configService: ConfigService) {
+    const password = configService.get<string>('REDIS_PASSWORD')
+
     this.client = new Redis({
-      host: configService.get<string>('REDIS_HOST') ?? 'localhost',
-      port: Number(configService.get<string>('REDIS_PORT') ?? 6379),
+      host: configService.getOrThrow<string>('REDIS_HOST'),
+      port: configService.getOrThrow<number>('REDIS_PORT'),
+      ...(password ? { password } : {}),
       lazyConnect: true
     })
   }

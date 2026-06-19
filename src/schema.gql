@@ -1,0 +1,103 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type AuthResponseModel {
+  accessToken: String!
+  refreshToken: String!
+  user: UserModel!
+}
+
+type AuthSessionModel {
+  createdAt: DateTime!
+  deviceId: String!
+  deviceName: String
+  isCurrent: Boolean!
+  lastUsedAt: DateTime!
+  sessionId: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+input LoginInput {
+  deviceId: String!
+  deviceName: String
+  email: String!
+  password: String!
+}
+
+type LoginResponseModel {
+  accessToken: String
+  refreshToken: String
+  requiresTwoFactor: Boolean!
+  twoFactorChallengeToken: String
+  user: UserModel
+}
+
+type Mutation {
+  confirmTwoFactorSetup(code: String!): TwoFactorConfirmationModel!
+  disableTwoFactor(code: String!): Boolean!
+  login(input: LoginInput!): LoginResponseModel!
+  logout: Boolean!
+  refreshToken(input: RefreshTokenInput!): AuthResponseModel!
+  register(input: RegisterInput!): AuthResponseModel!
+  revokeSession(sessionId: String!): Boolean!
+  startTwoFactorSetup: TwoFactorSetupModel!
+  verifyTwoFactorLogin(input: VerifyTwoFactorLoginInput!): AuthResponseModel!
+}
+
+type ProfileModel {
+  avatarUrl: String
+  displayName: String!
+  id: String!
+}
+
+type Query {
+  me: UserModel!
+  sessions: [AuthSessionModel!]!
+  users: [UserModel!]!
+}
+
+input RefreshTokenInput {
+  refreshToken: String!
+}
+
+input RegisterInput {
+  deviceId: String!
+  deviceName: String
+  displayName: String!
+  email: String!
+  password: String!
+  username: String!
+}
+
+type TwoFactorConfirmationModel {
+  enabled: Boolean!
+  recoveryCodes: [String!]!
+}
+
+type TwoFactorSetupModel {
+  manualEntryKey: String!
+  otpauthUri: String!
+  qrCodeDataUrl: String!
+}
+
+type UserModel {
+  createdAt: DateTime!
+  email: String!
+  id: String!
+  isAdmin: Boolean!
+  profile: ProfileModel
+  status: String!
+  username: String!
+}
+
+input VerifyTwoFactorLoginInput {
+  code: String!
+  deviceId: String!
+  deviceName: String
+  twoFactorChallengeToken: String!
+}
