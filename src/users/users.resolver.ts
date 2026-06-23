@@ -8,7 +8,7 @@ import { UserModel } from './models/user.model'
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
-  @Query(() => [UserModel])
+  @Query(() => [UserModel], { description: 'Lists public user profiles. Authentication is required.' })
   @UseGuards(JwtAuthGuard)
   users() {
     return this.usersService.findAll()

@@ -2,19 +2,60 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+"""Tokens and public user data returned after successful authentication."""
 type AuthResponseModel {
+  """Short-lived JWT used as the Bearer token for protected operations."""
   accessToken: String!
+
+  """Opaque token used only to obtain a rotated token pair."""
   refreshToken: String!
+
+  """Public data for the authenticated user."""
   user: UserModel!
 }
 
+"""Metadata for an active user session. No session tokens are exposed."""
 type AuthSessionModel {
+  """Time when the session was created."""
   createdAt: DateTime!
+
+  """Stable client device identifier associated with the session."""
   deviceId: String!
+
+  """Optional human-readable device name."""
   deviceName: String
+
+  """Whether this is the session that made the request."""
   isCurrent: Boolean!
+
+  """Time when this session last authenticated a protected request."""
   lastUsedAt: DateTime!
+
+  """Server-generated identifier used to revoke this session."""
   sessionId: String!
+}
+
+"""Data used to create private equipment for the authenticated user."""
+input CreateEquipmentInput {
+  """Optional equipment description."""
+  description: String
+
+  """Non-blank equipment name, up to 255 characters."""
+  name: String!
+}
+
+"""Data used to create a private exercise for the authenticated user."""
+input CreateExerciseInput {
+  """Optional exercise description."""
+  description: String
+
+  """
+  Optional unique equipment UUIDs accessible to the authenticated user (maximum 100).
+  """
+  equipmentIds: [String!]
+
+  """Non-blank exercise name, up to 255 characters."""
+  name: String!
 }
 
 """
@@ -22,82 +63,310 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+"""Equipment accessible to the authenticated user."""
+type EquipmentModel {
+  """Time when the equipment was created."""
+  createdAt: DateTime!
+
+  """Optional equipment description."""
+  description: String
+
+  """Equipment UUID."""
+  id: String!
+
+  """Equipment name."""
+  name: String!
+
+  """
+  SYSTEM for catalog equipment or USER for equipment owned by the requester.
+  """
+  scope: String!
+
+  """Time when the equipment was last updated."""
+  updatedAt: DateTime!
+}
+
+"""
+Exercise accessible to the authenticated user, with its associated equipment.
+"""
+type ExerciseModel {
+  """Time when the exercise was created."""
+  createdAt: DateTime!
+
+  """Optional exercise description."""
+  description: String
+
+  """Equipment associated with the exercise."""
+  equipment: [EquipmentModel!]!
+
+  """Exercise UUID."""
+  id: String!
+
+  """Exercise name."""
+  name: String!
+
+  """
+  SYSTEM for catalog exercises or USER for exercises owned by the requester.
+  """
+  scope: String!
+
+  """Time when the exercise was last updated."""
+  updatedAt: DateTime!
+}
+
+"""Credentials and device data used to sign in."""
 input LoginInput {
+  """Stable client device identifier (8 to 128 characters)."""
   deviceId: String!
+
+  """Human-readable device name shown in the session list."""
   deviceName: String
+
+  """Account email address."""
   email: String!
+
+  """Account password. It is never returned in API responses."""
   password: String!
 }
 
+"""
+Result of a password sign-in attempt, including the 2FA branch when required.
+"""
 type LoginResponseModel {
+  """Access JWT. Present only when requiresTwoFactor is false."""
   accessToken: String
+
+  """Refresh token. Present only when requiresTwoFactor is false."""
   refreshToken: String
+
+  """
+  True when verifyTwoFactorLogin must be called before tokens are issued.
+  """
   requiresTwoFactor: Boolean!
+
+  """Temporary challenge required only when requiresTwoFactor is true."""
   twoFactorChallengeToken: String
+
+  """Authenticated user. Present only when requiresTwoFactor is false."""
   user: UserModel
 }
 
 type Mutation {
+  """
+  Enables two-factor authentication after verifying a TOTP code and returns single-use recovery codes.
+  """
   confirmTwoFactorSetup(code: String!): TwoFactorConfirmationModel!
+
+  """Creates private equipment for the authenticated user."""
+  createEquipment(input: CreateEquipmentInput!): EquipmentModel!
+
+  """Creates a private exercise and can associate accessible equipment."""
+  createExercise(input: CreateExerciseInput!): ExerciseModel!
+
+  """
+  Disables two-factor authentication after validating a TOTP or recovery code.
+  """
   disableTwoFactor(code: String!): Boolean!
+
+  """
+  Signs in. If two-factor authentication is enabled, returns a challenge and does not issue tokens yet.
+  """
   login(input: LoginInput!): LoginResponseModel!
+
+  """Revokes the currently authenticated session."""
   logout: Boolean!
+
+  """
+  Rotates a valid refresh token and issues a new token pair for its session.
+  """
   refreshToken(input: RefreshTokenInput!): AuthResponseModel!
+
+  """Creates an account and a session for the supplied device."""
   register(input: RegisterInput!): AuthResponseModel!
+
+  """
+  Revokes an owned session by sessionId. Sessions belonging to other users cannot be revoked.
+  """
   revokeSession(sessionId: String!): Boolean!
+
+  """
+  Starts two-factor setup and returns data for enrolling an authenticator.
+  """
   startTwoFactorSetup: TwoFactorSetupModel!
+
+  """
+  Updates private equipment owned by the user. SYSTEM equipment cannot be modified.
+  """
+  updateEquipment(input: UpdateEquipmentInput!): EquipmentModel!
+
+  """
+  Updates a private exercise owned by the user. SYSTEM exercises cannot be modified.
+  """
+  updateExercise(input: UpdateExerciseInput!): ExerciseModel!
+
+  """Completes a two-factor sign-in challenge and issues a new session."""
   verifyTwoFactorLogin(input: VerifyTwoFactorLoginInput!): AuthResponseModel!
 }
 
+"""Public profile data associated with a user."""
 type ProfileModel {
+  """Optional avatar URL."""
   avatarUrl: String
+
+  """Public display name."""
   displayName: String!
+
+  """Profile UUID."""
   id: String!
 }
 
 type Query {
+  """Lists system equipment and equipment owned by the authenticated user."""
+  equipment: [EquipmentModel!]!
+
+  """
+  Gets accessible equipment: system-owned or owned by the authenticated user.
+  """
+  equipmentById(id: String!): EquipmentModel!
+
+  """
+  Gets an accessible exercise: system-owned or owned by the authenticated user.
+  """
+  exerciseById(id: String!): ExerciseModel!
+
+  """Lists system exercises and exercises owned by the authenticated user."""
+  exercises: [ExerciseModel!]!
+
+  """Returns the public profile of the authenticated user."""
   me: UserModel!
+
+  """
+  Lists active sessions of the authenticated user, ordered by most recent use.
+  """
   sessions: [AuthSessionModel!]!
+
+  """Lists public user profiles. Authentication is required."""
   users: [UserModel!]!
 }
 
+"""Refresh token for an active session."""
 input RefreshTokenInput {
+  """
+  Refresh token received after registration, sign-in, or a previous refresh.
+  """
   refreshToken: String!
 }
 
+"""Data used to create a local account and its first session."""
 input RegisterInput {
+  """Stable client device identifier (8 to 128 characters)."""
   deviceId: String!
+
+  """Human-readable device name shown in the session list."""
   deviceName: String
+
+  """Public display name shown in the profile."""
   displayName: String!
+
+  """Unique account email address."""
   email: String!
+
+  """Initial password, at least 8 characters. It is never returned."""
   password: String!
+
+  """Unique username, from 3 to 50 characters."""
   username: String!
 }
 
+"""Result of enabling two-factor authentication."""
 type TwoFactorConfirmationModel {
+  """True once the TOTP configuration has been enabled."""
   enabled: Boolean!
+
+  """
+  One-time recovery codes. Display and store them securely; they are not returned again.
+  """
   recoveryCodes: [String!]!
 }
 
+"""One-time setup material used to enroll a TOTP authenticator."""
 type TwoFactorSetupModel {
+  """Manual TOTP secret for authenticators that cannot scan the QR code."""
   manualEntryKey: String!
+
+  """otpauth URI that can be opened by a compatible authenticator app."""
   otpauthUri: String!
+
+  """Data URL containing a QR code for the otpauth URI."""
   qrCodeDataUrl: String!
 }
 
-type UserModel {
-  createdAt: DateTime!
-  email: String!
+"""Changes to private equipment owned by the authenticated user."""
+input UpdateEquipmentInput {
+  """New optional description. Send null to clear it."""
+  description: String
+
+  """UUID of the USER-scoped equipment to update."""
   id: String!
+
+  """New non-blank name, up to 255 characters."""
+  name: String
+}
+
+"""Changes to a private exercise owned by the authenticated user."""
+input UpdateExerciseInput {
+  """New optional description. Send null to clear it."""
+  description: String
+
+  """
+  Replacement list of unique accessible equipment UUIDs (maximum 100). Send an empty list to remove all associations.
+  """
+  equipmentIds: [String!]
+
+  """UUID of the USER-scoped exercise to update."""
+  id: String!
+
+  """New non-blank name, up to 255 characters."""
+  name: String
+}
+
+"""
+Public user account data. It never includes credentials, tokens, or 2FA secrets.
+"""
+type UserModel {
+  """Time when the account was created."""
+  createdAt: DateTime!
+
+  """Account email address."""
+  email: String!
+
+  """User UUID."""
+  id: String!
+
+  """Whether the account has administrator privileges."""
   isAdmin: Boolean!
+
+  """Optional public profile associated with the account."""
   profile: ProfileModel
+
+  """Current account status."""
   status: String!
+
+  """Unique username."""
   username: String!
 }
 
+"""Data used to complete a two-factor sign-in challenge."""
 input VerifyTwoFactorLoginInput {
+  """Six-digit TOTP code or a recovery code in XXXX-XXXX format."""
   code: String!
+
+  """Stable client device identifier (8 to 128 characters)."""
   deviceId: String!
+
+  """Human-readable device name shown in the session list."""
   deviceName: String
+
+  """Temporary challenge returned by login when requiresTwoFactor is true."""
   twoFactorChallengeToken: String!
 }

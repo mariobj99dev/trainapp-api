@@ -1,13 +1,13 @@
 import { Field, ObjectType } from '@nestjs/graphql'
 
-@ObjectType()
+@ObjectType({ description: 'Public profile data associated with a user.' })
 export class ProfileModel {
-  @Field()
+  @Field({ description: 'Profile UUID.' })
   id: string
 
-  @Field()
+  @Field({ description: 'Public display name.' })
   displayName: string
 
-  @Field({ nullable: true })
+  @Field({ nullable: true, description: 'Optional avatar URL.' })
   avatarUrl?: string
 }
