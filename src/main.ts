@@ -35,9 +35,7 @@ async function bootstrap() {
           validationErrors
         })
         return new BadRequestException(
-          process.env.NODE_ENV === 'development'
-            ? { message: 'Validation failed', validationErrors }
-            : 'Validation failed'
+          process.env.NODE_ENV === 'development' ? { message: 'Validation failed', validationErrors } : 'Validation failed'
         )
       }
     })

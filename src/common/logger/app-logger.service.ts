@@ -22,9 +22,7 @@ export class AppLogger implements LoggerService {
     const isDevelopment = process.env.NODE_ENV === 'development'
     const streams: pino.StreamEntry[] = [
       {
-        stream: isDevelopment
-          ? pinoPretty({ colorize: true, singleLine: true, translateTime: 'SYS:standard' })
-          : process.stdout
+        stream: isDevelopment ? pinoPretty({ colorize: true, singleLine: true, translateTime: 'SYS:standard' }) : process.stdout
       }
     ]
 
@@ -77,9 +75,6 @@ export class AppLogger implements LoggerService {
   }
 
   private write(level: 'debug' | 'info' | 'warn' | 'error' | 'fatal', message: string, context?: LogContext) {
-    this.logger[level](
-      sanitizeForLog({ ...this.requestContext.getStore(), ...context }) as Record<string, unknown>,
-      message
-    )
+    this.logger[level](sanitizeForLog({ ...this.requestContext.getStore(), ...context }) as Record<string, unknown>, message)
   }
 }
