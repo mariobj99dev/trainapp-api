@@ -2,8 +2,8 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN corepack enable && pnpm install --frozen-lockfile
 
 COPY . .
 
@@ -16,11 +16,13 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY package*.json ./
-RUN npm ci --omit=dev \
-  && npm cache clean --force
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN corepack enable && pnpm install --prod --frozen-lockfile \
+  && pnpm store prune
 
 COPY --from=builder --chown=node:node /app/dist ./dist
+
+RUN mkdir -p /app/logs && chown -R node:node /app
 
 USER node
 

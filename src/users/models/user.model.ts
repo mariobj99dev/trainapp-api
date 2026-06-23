@@ -1,26 +1,26 @@
 import { Field, ObjectType } from '@nestjs/graphql'
 import { ProfileModel } from './profile.model'
 
-@ObjectType()
+@ObjectType({ description: 'Public user account data. It never includes credentials, tokens, or 2FA secrets.' })
 export class UserModel {
-  @Field()
+  @Field({ description: 'User UUID.' })
   id: string
 
-  @Field()
+  @Field({ description: 'Account email address.' })
   email: string
 
-  @Field()
+  @Field({ description: 'Unique username.' })
   username: string
 
-  @Field()
+  @Field({ description: 'Current account status.' })
   status: string
 
-  @Field()
+  @Field({ description: 'Whether the account has administrator privileges.' })
   isAdmin: boolean
 
-  @Field()
+  @Field({ description: 'Time when the account was created.' })
   createdAt: Date
 
-  @Field(() => ProfileModel, { nullable: true })
+  @Field(() => ProfileModel, { nullable: true, description: 'Optional public profile associated with the account.' })
   profile?: ProfileModel
 }

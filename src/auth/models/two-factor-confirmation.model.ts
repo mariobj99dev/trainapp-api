@@ -1,10 +1,10 @@
 import { Field, ObjectType } from '@nestjs/graphql'
 
-@ObjectType()
+@ObjectType({ description: 'Result of enabling two-factor authentication.' })
 export class TwoFactorConfirmationModel {
-  @Field()
+  @Field({ description: 'True once the TOTP configuration has been enabled.' })
   enabled: boolean
 
-  @Field(() => [String])
+  @Field(() => [String], { description: 'One-time recovery codes. Display and store them securely; they are not returned again.' })
   recoveryCodes: string[]
 }

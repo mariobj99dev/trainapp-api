@@ -10,13 +10,15 @@ import { RegisterInput } from '../dto/register.input'
 import { VerifyTwoFactorLoginInput } from '../dto/verify-two-factor-login.input'
 import { SessionService } from './session.service'
 import { TwoFactorService } from './two-factor.service'
+import { AppLogger } from '../../common/logger/app-logger.service'
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sessionService: SessionService,
-    private readonly twoFactorService: TwoFactorService
+    private readonly twoFactorService: TwoFactorService,
+    private readonly logger: AppLogger
   ) {}
 
   async register(input: RegisterInput) {
@@ -27,6 +29,7 @@ export class AuthService {
     })
 
     if (existingUser) {
+      this.logger.warn('Registration rejected: user already exists', { context: 'AuthService' })
       throw new ConflictException('El email o username ya esta en uso')
     }
 
@@ -71,6 +74,7 @@ export class AuthService {
       select: publicUserSelect
     })
 
+    this.logger.info('User registered', { context: 'AuthService', userId: user.id })
     return this.buildAuthResponse(user, input.deviceId, input.deviceName)
   }
 
@@ -90,18 +94,21 @@ export class AuthService {
     })
 
     if (!user?.credential) {
+      this.logger.warn('Login rejected: invalid credentials', { context: 'AuthService' })
       throw new UnauthorizedException('Credenciales invalidas')
     }
 
     const passwordMatches = await bcrypt.compare(input.password, user.credential.passwordHash)
 
     if (!passwordMatches) {
+      this.logger.warn('Login rejected: invalid credentials', { context: 'AuthService' })
       throw new UnauthorizedException('Credenciales invalidas')
     }
 
     const { credential: _credential, ...publicUser } = user
 
     if (await this.twoFactorService.isEnabled(publicUser.id)) {
+      this.logger.info('Two-factor authentication challenge requested', { context: 'AuthService', userId: publicUser.id })
       return {
         requiresTwoFactor: true,
         twoFactorChallengeToken: await this.twoFactorService.createLoginChallenge(publicUser.id)
@@ -130,6 +137,7 @@ export class AuthService {
 
   async logout(sessionId: string) {
     await this.sessionService.revoke(sessionId)
+    this.logger.info('Session revoked', { context: 'AuthService' })
     return true
   }
 
@@ -159,6 +167,7 @@ export class AuthService {
 
   private async buildAuthResponse(user: PublicUser, deviceId: string, deviceName?: string) {
     const tokens = await this.sessionService.create(user.id, deviceId, deviceName)
+    this.logger.info('Session created', { context: 'AuthService', userId: user.id })
 
     return {
       requiresTwoFactor: false,

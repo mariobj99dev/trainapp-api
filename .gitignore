@@ -7,6 +7,7 @@
 logs
 *.log
 npm-debug.log*
+package-lock.json
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -55,4 +56,5 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-/generated/prisma
+/src/prisma/generated/prisma/
+/.pnpm-store/

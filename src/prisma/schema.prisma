@@ -23,6 +23,8 @@ model User {
   profile       Profile?
   twoFactor     UserTwoFactor?
   recoveryCodes RecoveryCode[]
+  equipment     Equipment[]
+  exercises     Exercise[]
 
   @@map("users")
 }
@@ -92,4 +94,48 @@ model RecoveryCode {
 
   @@index([userId], map: "recovery_codes_user_id_idx")
   @@map("recovery_codes")
+}
+
+model Equipment {
+  id          String   @id @db.Uuid
+  userId      String?  @map("user_id") @db.Uuid
+  scope       String   @db.VarChar(20)
+  name        String   @db.VarChar(255)
+  description String?
+  createdAt   DateTime @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @map("updated_at") @db.Timestamptz(6)
+
+  user              User?               @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "equipment_user_id_fk")
+  exerciseEquipment ExerciseEquipment[]
+
+  @@index([userId], map: "equipment_user_id_idx")
+  @@map("equipment")
+}
+
+model Exercise {
+  id          String   @id @db.Uuid
+  userId      String?  @map("user_id") @db.Uuid
+  scope       String   @db.VarChar(20)
+  name        String   @db.VarChar(255)
+  description String?
+  createdAt   DateTime @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @map("updated_at") @db.Timestamptz(6)
+
+  user              User?               @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "exercises_user_id_fk")
+  exerciseEquipment ExerciseEquipment[]
+
+  @@index([userId], map: "exercises_user_id_idx")
+  @@map("exercises")
+}
+
+model ExerciseEquipment {
+  exerciseId  String @map("exercise_id") @db.Uuid
+  equipmentId String @map("equipment_id") @db.Uuid
+
+  exercise  Exercise  @relation(fields: [exerciseId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "exercise_equipment_exercise_id_fk")
+  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "exercise_equipment_equipment_id_fk")
+
+  @@id([exerciseId, equipmentId], map: "exercise_equipment_pk")
+  @@index([equipmentId], map: "exercise_equipment_equipment_id_idx")
+  @@map("exercise_equipment")
 }

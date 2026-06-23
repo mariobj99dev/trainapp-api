@@ -10,6 +10,7 @@ export default tseslint.config(
         'dist',
         'coverage',
         'node_modules',
+        'src/prisma/generated/**',
         '.nestjs',
         '*.js',
         '*.cjs',
